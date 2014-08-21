@@ -13,8 +13,9 @@ object MyModule {
     msg.format(x, abs(x))
   }
 
-  def main(args: Array[String]): Unit =
+  def main(args: Array[String]): Unit = {
     println(formatAbs(-42))
+	}
 
   // A definition of factorial, using a local, tail recursive function
   def factorial(n: Int): Int = {
@@ -36,7 +37,13 @@ object MyModule {
 
   // Exercise 1: Write a function to compute the nth fibonacci number
 
-  def fib(n: Int): Int = ???
+  def fib(n: Int): Int = {
+		@annotation.tailrec
+		def go(a: Int, b: Int, n: Int): Int =
+			if (n <= 0) a
+			else go(b, a + b, n - 1)
+		go(0, 1, n);
+	}
 
   // This definition and `formatAbs` are very similar..
   private def formatFactorial(n: Int) = {
@@ -62,6 +69,16 @@ object FormatAbsAndFactorial {
     println(formatResult("absolute value", -42, abs))
     println(formatResult("factorial", 7, factorial))
   }
+}
+
+object FormatFib {
+	import MyModule._
+
+	def main(args: Array[String]): Unit = {
+		println(formatResult("fibonacci", 0, fib))
+		println(formatResult("fibonacci", 10, fib))
+		println(formatResult("fibonacci", 20, fib))
+	}
 }
 
 // Functions get passed around so often in FP that it's

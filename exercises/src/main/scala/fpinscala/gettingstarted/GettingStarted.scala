@@ -42,7 +42,7 @@ object MyModule {
 		def go(a: Int, b: Int, n: Int): Int =
 			if (n <= 0) a
 			else go(b, a + b, n - 1)
-		go(0, 1, n);
+		go(0, 1, n)
 	}
 
   // This definition and `formatAbs` are very similar..
@@ -147,7 +147,14 @@ object PolymorphicFunctions {
 
   // Exercise 2: Implement a polymorphic function to check whether
   // an `Array[A]` is sorted
-  def isSorted[A](as: Array[A], gt: (A,A) => Boolean): Boolean = ???
+  def isSorted[A](as: Array[A], gt: (A,A) => Boolean): Boolean = {
+    def go(n: Int): Boolean = {
+      if (n >= as.length - 1) true
+      else if (gt(as(n + 1), as(n))) false
+      else go(n + 1)
+    }
+    go(0)
+  }
 
   // Polymorphic functions are often so constrained by their type
   // that they only have one implementation! Here's an example:
@@ -182,4 +189,15 @@ object PolymorphicFunctions {
 
   def compose[A,B,C](f: B => C, g: A => B): A => C =
     ???
+}
+
+object PolymorphicFunctionsTest {
+  import PolymorphicFunctions._
+
+  def main(args: Array[String]) {
+    def gt(x: Int, y: Int): Boolean = x < y
+    println("2. isSorted")
+    println("Expected: %b, %b".format(true, false))
+    println("Actual:   %b, %b".format(isSorted(Array(1,2,3), gt), isSorted(Array(2,3,1), gt)))
+  }
 }

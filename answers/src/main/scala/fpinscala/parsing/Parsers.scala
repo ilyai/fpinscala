@@ -4,6 +4,8 @@ import java.util.regex._
 import scala.util.matching.Regex
 import fpinscala.testing._
 import fpinscala.testing.Prop._
+import language.higherKinds
+import language.implicitConversions
 
 trait Parsers[Parser[+_]] { self => // so inner classes may call methods of trait
   def run[A](p: Parser[A])(input: String): Either[ParseError,A]
@@ -134,7 +136,7 @@ trait Parsers[Parser[+_]] { self => // so inner classes may call methods of trai
     p <* eof
 
   case class ParserOps[A](p: Parser[A]) {
-    def |[B>:A](p2: Parser[B]): Parser[B] = self.or(p,p2) // use `self` to explicitly disambiguate reference to the `or` method on the `trait`
+    def |[B>:A](p2: => Parser[B]): Parser[B] = self.or(p,p2) // use `self` to explicitly disambiguate reference to the `or` method on the `trait`
     def or[B>:A](p2: => Parser[B]): Parser[B] = self.or(p,p2)
 
     def map[B](f: A => B): Parser[B] = self.map(p)(f)

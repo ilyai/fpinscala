@@ -6,6 +6,8 @@ import state._
 import State._
 import StateUtil._ // defined at bottom of this file
 import monoids._
+import language.higherKinds
+import language.implicitConversions
 
 trait Applicative[F[_]] extends Functor[F] {
 
@@ -24,7 +26,7 @@ trait Applicative[F[_]] extends Functor[F] {
 
   def replicateM[A](n: Int, fa: F[A]): F[List[A]] = ???
 
-  def factor[A,B](fa: F[A], fb: F[A]): F[(A,B)] = ???
+  def factor[A,B](fa: F[A], fb: F[B]): F[(A,B)] = ???
 
   def product[G[_]](G: Applicative[G]): Applicative[({type f[x] = (F[x], G[x])})#f] = ???
 
@@ -97,14 +99,7 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
   def sequence[G[_]:Applicative,A](fma: F[G[A]]): G[F[A]] =
     traverse(fma)(ma => ma)
 
-  type Id[A] = A
-  val idMonad = new Monad[Id] {
-    def unit[A](a: => A) = a
-    override def flatMap[A,B](a: A)(f: A => B): B = f(a)
-  }
-
-  def map[A,B](fa: F[A])(f: A => B): F[B] =
-    traverse[Id, A, B](fa)(f)(idMonad)
+  def map[A,B](fa: F[A])(f: A => B): F[B] = ???
 
   import Applicative._
 
@@ -118,7 +113,7 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
   def mapAccum[S,A,B](fa: F[A], s: S)(f: (A, S) => (B, S)): (F[B], S) =
     traverseS(fa)((a: A) => (for {
       s1 <- get[S]
-      (b, s2) = f(a, s)
+      (b, s2) = f(a, s1)
       _  <- set(s2)
     } yield b)).run(s)
 

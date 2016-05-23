@@ -47,7 +47,7 @@ object MyModule {
 
   // This definition and `formatAbs` are very similar..
   private def formatFactorial(n: Int) = {
-    val msg = "The absolute value of %d is %d."
+    val msg = "The factorial of %d is %d."
     msg.format(n, factorial(n))
   }
 
@@ -71,14 +71,15 @@ object FormatAbsAndFactorial {
   }
 }
 
-object FormatFib {
-	import MyModule._
+object TestFib {
 
-	def main(args: Array[String]): Unit = {
-		println(formatResult("fibonacci", 0, fib))
-		println(formatResult("fibonacci", 10, fib))
-		println(formatResult("fibonacci", 20, fib))
-	}
+  import MyModule._
+
+  // test implementation of `fib`
+  def main(args: Array[String]): Unit = {
+    println("Expected: 0, 1, 1, 2, 3, 5, 8")
+    println("Actual:   %d, %d, %d, %d, %d, %d, %d".format(fib(0), fib(1), fib(2), fib(3), fib(4), fib(5), fib(6)))
+  }
 }
 
 // Functions get passed around so often in FP that it's
@@ -151,12 +152,10 @@ object PolymorphicFunctions {
   // Polymorphic functions are often so constrained by their type
   // that they only have one implementation! Here's an example:
 
-  // Exercise 3: Implement `partial1`.
-
   def partial1[A,B,C](a: A, f: (A,B) => C): B => C =
-    ???
+    (b: B) => f(a, b)
 
-  // Exercise 4: Implement `curry`.
+  // Exercise 3: Implement `curry`.
 
   // Note that `=>` associates to the right, so we could
   // write the return type as `A => B => C`
@@ -165,7 +164,7 @@ object PolymorphicFunctions {
 
   // NB: The `Function2` trait has a `curried` method already
 
-  // Exercise 5: Implement `uncurry`
+  // Exercise 4: Implement `uncurry`
   def uncurry[A,B,C](f: A => B => C): (A, B) => C =
     ???
 
@@ -179,7 +178,7 @@ object PolymorphicFunctions {
   a term we inherit from category theory.
   */
 
-  // Exercise 6: Implement `compose`
+  // Exercise 5: Implement `compose`
 
   def compose[A,B,C](f: B => C, g: A => B): A => C =
     ???

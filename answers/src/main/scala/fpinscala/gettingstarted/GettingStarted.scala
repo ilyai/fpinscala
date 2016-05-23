@@ -49,7 +49,7 @@ object MyModule {
 
   // This definition and `formatAbs` are very similar..
   private def formatFactorial(n: Int) = {
-    val msg = "The absolute value of %d is %d."
+    val msg = "The factorial of %d is %d."
     msg.format(n, factorial(n))
   }
 
@@ -136,12 +136,12 @@ object PolymorphicFunctions {
   // an `Array[A]` is sorted
   def isSorted[A](as: Array[A], gt: (A,A) => Boolean): Boolean = {
     @annotation.tailrec
-    def go(i: Int, prev: A): Boolean =
-      if (i == as.length) true
-      else if (gt(as(i), prev)) go(i + 1, as(i))
-      else false
-    if (as.length == 0) true
-    else go(1, as(0))
+    def go(n: Int): Boolean =
+      if (n >= as.length-1) true
+      else if (gt(as(n), as(n+1))) false
+      else go(n+1)
+
+    go(0)
   }
 
   // Polymorphic functions are often so constrained by their type

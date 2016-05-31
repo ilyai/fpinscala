@@ -35,7 +35,7 @@ object List { // `List` companion object. Contains functions for creating and wo
       case Cons(h,t) => Cons(h, append(t, a2))
     }
 
-  def append2[A](a1: List[A], a2: List[A]): List[A] = sys.error("todo")
+  def append2[A](a1: List[A], a2: List[A]): List[A] = foldRight(a1, a2)((a,b) => Cons(a, b))
 
   def foldRight[A,B](as: List[A], z: B)(f: (A, B) => B): B = // Utility functions
     as match {
@@ -101,9 +101,11 @@ object List { // `List` companion object. Contains functions for creating and wo
   def foldLeftViaFoldRight[A,B](l: List[A], z: B)(f: (B,A) => B): B =
     foldRight(l, (b:B) => b)((a,g) => b => g(f(b,a)))(z)
 
-  def map[A,B](l: List[A])(f: A => B): List[B] = sys.error("todo")
+  def map[A,B](l: List[A])(f: A => B): List[B] = foldRight(l, Nil:List[B])((a, b) => Cons(f(a), b))
 
   def reverse[A](l: List[A]): List[A] = foldLeft(l, Nil: List[A])((a, b) => Cons(b, a))
+
+  def flatten[A](l: List[List[A]]): List[A] = foldRight(l, Nil: List[A])((a,b) => append2(a, b))
 }
 
 object ListTest {
@@ -125,5 +127,8 @@ object ListTest {
     assert(reverse(l) == List(3,2,1))
     assert(foldLeft2(l, 0)(_ + _) == 6)
     assert(foldRight2(l, 0)(_ + _) == 6)
+    assert(append2(l, List(4,5)) == List(1,2,3,4,5))
+    assert(map(l)(_ + 1) == List(2,3,4))
+    assert(flatten(List(List(1,2),List(3,4))) == List(1,2,3,4))
   }
 }

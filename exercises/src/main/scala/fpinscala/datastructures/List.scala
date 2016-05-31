@@ -106,6 +106,34 @@ object List { // `List` companion object. Contains functions for creating and wo
   def reverse[A](l: List[A]): List[A] = foldLeft(l, Nil: List[A])((a, b) => Cons(b, a))
 
   def flatten[A](l: List[List[A]]): List[A] = foldRight(l, Nil: List[A])((a,b) => append2(a, b))
+
+  def add1(xs: List[Int]): List[Int] = map(xs)(_ + 1)
+
+  def doublesToStrings(xs: List[Double]): List[String] = map(xs)(_.toString)
+
+  def filter[A](as: List[A])(f: A => Boolean): List[A] = foldRight(as, Nil:List[A])((a,b) => if (f(a)) Cons(a,b) else b)
+
+  def filter2[A](as: List[A])(f: A => Boolean): List[A] = flatMap(as)(a => if (f(a)) List(a) else Nil)
+
+  def flatMap[A,B](as: List[A])(f: A => List[B]): List[B] = foldRight(as, Nil:List[B])((a, b) => append2(f(a), b))
+
+  def zip[A](a1: List[A], a2: List[A]): List[List[A]] = (a1,a2) match {
+    case (Nil, _) => Nil
+    case (_, Nil) => Nil
+    case (Cons(h1,t1), Cons(h2,t2)) => Cons(List(h1,h2), zip(t1, t2))
+  }
+
+  def zipAndSum(a1: List[Int], a2: List[Int]): List[Int] = (a1,a2) match {
+    case (Nil, _) => Nil
+    case (_, Nil) => Nil
+    case (Cons(h1,t1), Cons(h2,t2)) => Cons(h1 + h2, zipAndSum(t1, t2))
+  }
+
+  def zipWith[A,B](a1: List[A], a2: List[A])(f: (A, A) => B): List[B] = (a1,a2) match {
+    case (Nil, _) => Nil
+    case (_, Nil) => Nil
+    case (Cons(h1,t1), Cons(h2,t2)) => Cons(f(h1, h2), zipWith(t1, t2)(f))
+  }
 }
 
 object ListTest {
@@ -130,5 +158,12 @@ object ListTest {
     assert(append2(l, List(4,5)) == List(1,2,3,4,5))
     assert(map(l)(_ + 1) == List(2,3,4))
     assert(flatten(List(List(1,2),List(3,4))) == List(1,2,3,4))
+    assert(add1(l) == List(2,3,4))
+    assert(doublesToStrings(List(1.0,2.0)) == List("1.0", "2.0"))
+    assert(filter(l)(_ % 2 == 0) == List(2))
+    assert(flatMap(l)(i => List(i,i)) == List(1,1,2,2,3,3))
+    assert(filter2(l)(_ % 2 == 0) == List(2))
+    assert(zipAndSum(l, List(4,5,6)) == List(5,7,9))
+    assert(zipWith(l, List(4,5,6))(_ * _) == List(4, 10, 18))
   }
 }

@@ -134,6 +134,22 @@ object List { // `List` companion object. Contains functions for creating and wo
     case (_, Nil) => Nil
     case (Cons(h1,t1), Cons(h2,t2)) => Cons(f(h1, h2), zipWith(t1, t2)(f))
   }
+
+  def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = {
+    def matches(haystack: List[A], needle: List[A]): Boolean = (haystack, needle) match {
+      case (_, Nil) => true
+      case (Cons(h1,t1), Cons(h2,t2)) => if (h1 == h2) matches(t1, t2) else false
+      case _ => false
+    }
+    (sup, sub) match {
+      case (Nil, _) => false
+      case (_, Nil) => false
+      case (Cons(h1,t1), Cons(h2,t2)) => if (h1 == h2) {
+        if (matches(t1, t2)) true
+        else hasSubsequence(t1, sub)
+      } else hasSubsequence(t1, sub)
+    }
+  }
 }
 
 object ListTest {
@@ -165,5 +181,8 @@ object ListTest {
     assert(filter2(l)(_ % 2 == 0) == List(2))
     assert(zipAndSum(l, List(4,5,6)) == List(5,7,9))
     assert(zipWith(l, List(4,5,6))(_ * _) == List(4, 10, 18))
+    assert(hasSubsequence(l, List(1,2)) == true)
+    assert(hasSubsequence(l, List(2)) == true)
+    assert(hasSubsequence(l, List(3,2)) == false)
   }
 }

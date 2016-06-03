@@ -1,7 +1,7 @@
 package fpinscala.errorhandling
 
 
-import scala.{Option => _, Some => _, Either => _, _} // hide std library `Option`, `Some` and `Either`, since we are writing our own in this chapter
+import scala.{Either => _, Option => _, Some => _, _} // hide std library `Option`, `Some` and `Either`, since we are writing our own in this chapter
 
 sealed trait Option[+A] {
   def map[B](f: A => B): Option[B] = this match {
@@ -47,11 +47,34 @@ object Option {
 
   def variance(xs: Seq[Double]): Option[Double] = mean(xs).flatMap(m => mean(xs.map(x => math.pow(x - m, 2))))
 
-  def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = sys.error("todo")
+  def lift[A,B](f: A => B): Option[A] => Option[B] = _ map f
+
+  def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = a.flatMap(av => b.map(bv => f(av, bv)))
 
   def sequence[A](a: List[Option[A]]): Option[List[A]] = sys.error("todo")
 
   def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = sys.error("todo")
+
+  val abs0: Option[Double] => Option[Double] = lift(math.abs)
+
+  /**
+    * Top secret formula from computing an annual car
+    * insurance premium from two key factors.
+    * @param age
+    * @param numberOfSpeedingTickets
+    * @return
+    */
+  def insuranceRateQuote(age: Int, numberOfSpeedingTickets: Int): Double = age * numberOfSpeedingTickets
+
+  def parseInsuranceRateQuote(
+                             age: String,
+                             numberOfSpeedingTickets: String): Option[Double] = {
+    val optAge: Option[Int] = Try(age.toInt)
+    val optTickets: Option[Int] = Try(numberOfSpeedingTickets.toInt)
+    map2(optAge, optTickets)(insuranceRateQuote)
+  }
+
+  def Try[A](a: => A): Option[A] = try Some(a) catch { case e: Exception => None }
 }
 
 object OptionTest {
@@ -66,5 +89,6 @@ object OptionTest {
     assert(opt.filter(_ == "foobar") == None)
     assert(opt.filter(_ == "foo") == Some("foo"))
     assert(variance(Seq(2.0, 2.0, 2.0)) == Some(0.0))
+    assert(parseInsuranceRateQuote("21", "4") == Some(84.0))
   }
 }

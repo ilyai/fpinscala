@@ -51,9 +51,18 @@ object Option {
 
   def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = a.flatMap(av => b.map(bv => f(av, bv)))
 
-  def sequence[A](a: List[Option[A]]): Option[List[A]] = sys.error("todo")
+  def map22[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = for {
+    aa <- a
+    bb <- b
+  } yield f(aa, bb)
 
-  def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = sys.error("todo")
+  def sequence[A](a: List[Option[A]]): Option[List[A]] = a.foldRight[Option[List[A]]](Some(Nil))((x, y) => map2(x, y)(_ :: _))
+  def sequence2[A](a: List[Option[A]]): Option[List[A]] = a.foldRight[Option[List[A]]](Some(Nil))((x, y) => map22(x, y)(_ :: _))
+
+  def parseInts(a: List[String]): Option[List[Int]] = sequence(a.map(i => Try(i.toInt)))
+
+  def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = a.foldRight[Option[List[B]]](Some(Nil))((x,y) => map2(f(x),y)(_ :: _))
+  def traverse2[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = a.foldRight[Option[List[B]]](Some(Nil))((x,y) => map22(f(x),y)(_ :: _))
 
   val abs0: Option[Double] => Option[Double] = lift(math.abs)
 
@@ -90,5 +99,9 @@ object OptionTest {
     assert(opt.filter(_ == "foo") == Some("foo"))
     assert(variance(Seq(2.0, 2.0, 2.0)) == Some(0.0))
     assert(parseInsuranceRateQuote("21", "4") == Some(84.0))
+    assert(sequence(List(Some("foo"), Some("bar"))) == Some(List("foo", "bar")))
+    assert(traverse(List("3", "2"))(i => Try(i.toInt)) == Some(List(3, 2)))
+    assert(sequence2(List(Some("foo"), Some("bar"))) == Some(List("foo", "bar")))
+    assert(traverse2(List("3", "2"))(i => Try(i.toInt)) == Some(List(3, 2)))
   }
 }

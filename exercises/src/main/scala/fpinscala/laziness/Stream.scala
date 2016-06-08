@@ -17,11 +17,21 @@ trait Stream[+A] {
     case Empty => None
     case Cons(h, t) => if (f(h())) Some(h()) else t().find(f)
   }
-  def take(n: Int): Stream[A] = sys.error("todo")
+  def take(n: Int): Stream[A] = this match {
+    case _ if n == 0 => Empty
+    case Empty => Empty
+    case Cons(h,t) => cons(h(), t().take(n-1))
+  }
 
-  def drop(n: Int): Stream[A] = sys.error("todo")
+  def drop(n: Int): Stream[A] = this match {
+    case Cons(_, t) if n > 0 => t().drop(n-1)
+    case _ => this
+  }
 
-  def takeWhile(p: A => Boolean): Stream[A] = sys.error("todo")
+  def takeWhile(p: A => Boolean): Stream[A] = this match {
+    case Cons(h,t) if p(h()) => cons(h(), t().takeWhile(p))
+    case _ => Empty
+  }
 
   def forAll(p: A => Boolean): Boolean = sys.error("todo")
 
@@ -67,5 +77,8 @@ object StreamTest {
 
   def main(args: Array[String]): Unit = {
     assert(cons(1, cons(2, cons(3, Empty))).toList == List(1,2,3))
+    assert(cons(1, cons(2, cons(3, Empty))).take(2).toList == List(1,2))
+    assert(cons(1, cons(2, cons(3, Empty))).drop(2).toList == List(3))
+    assert(cons(1, cons(2, cons(3, Empty))).takeWhile(_ <= 2).toList == List(1,2))
   }
 }

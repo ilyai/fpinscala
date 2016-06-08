@@ -25,12 +25,20 @@ trait Stream[+A] {
 
   def forAll(p: A => Boolean): Boolean = sys.error("todo")
 
-  def headOption: Option[A] = sys.error("todo")
+  def headOption: Option[A] = this match {
+    case Empty => None
+    case Cons(h,t) => Some(h())
+  }
 
   // 5.7 map, filter, append, flatmap using foldRight. Part of the exercise is
   // writing your own function signatures.
 
   def startsWith[B](s: Stream[B]): Boolean = sys.error("todo")
+
+  def toList: List[A] = this match {
+    case Empty => Nil: List[A]
+    case Cons(h,t) => h() :: t().toList
+  }
 }
 case object Empty extends Stream[Nothing]
 case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
@@ -52,4 +60,12 @@ object Stream {
   def from(n: Int): Stream[Int] = sys.error("todo")
 
   def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = sys.error("todo")
+}
+
+object StreamTest {
+  import Stream._
+
+  def main(args: Array[String]): Unit = {
+    assert(cons(1, cons(2, cons(3, Empty))).toList == List(1,2,3))
+  }
 }

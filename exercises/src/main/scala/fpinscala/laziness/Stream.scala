@@ -38,12 +38,16 @@ trait Stream[+A] {
     case _ => Empty
   }
 
+  def takeWhile2(p: A => Boolean): Stream[A] = foldRight(Empty: Stream[A])((a,b) => if (p(a)) cons(a, b) else Empty)
+
   def forAll(p: A => Boolean): Boolean = foldRight(true)((a,b) => p(a) && b)
 
   def headOption: Option[A] = this match {
     case Empty => None
     case Cons(h,t) => Some(h())
   }
+
+  def headOption2: Option[A] = foldRight(None: Option[A])((a,b) => Some(a))
 
   // 5.7 map, filter, append, flatmap using foldRight. Part of the exercise is
   // writing your own function signatures.
@@ -85,7 +89,10 @@ object StreamTest {
     assert(cons(1, cons(2, cons(3, Empty))).take(2).toList == List(1,2))
     assert(cons(1, cons(2, cons(3, Empty))).drop(2).toList == List(3))
     assert(cons(1, cons(2, cons(3, Empty))).takeWhile(_ <= 2).toList == List(1,2))
+    assert(cons(1, cons(2, cons(3, Empty))).takeWhile2(_ <= 2).toList == List(1,2))
     assert(cons(1, cons(2, cons(3, Empty))).forAll(_ < 5))
     assert(!cons(1, cons(2, cons(3, Empty))).forAll(_ < 2))
+    assert(cons(1, cons(2, cons(3, Empty))).headOption2.contains(1))
+    assert(!Empty.headOption2.contains(1))
   }
 }

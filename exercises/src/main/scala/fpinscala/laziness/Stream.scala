@@ -12,6 +12,11 @@ trait Stream[+A] {
   def exists(p: A => Boolean): Boolean = 
     foldRight(false)((a, b) => p(a) || b) // Here `b` is the unevaluated recursive step that folds the tail of the stream. If `p(a)` returns `true`, `b` will never be evaluated and the computation terminates early.
 
+  def exists2(p: A => Boolean): Boolean = this match {
+    case Cons(h,t) => p(h()) || t().exists2(p)
+    case _ => false
+  }
+
   @annotation.tailrec
   final def find(f: A => Boolean): Option[A] = this match {
     case Empty => None
@@ -33,7 +38,7 @@ trait Stream[+A] {
     case _ => Empty
   }
 
-  def forAll(p: A => Boolean): Boolean = sys.error("todo")
+  def forAll(p: A => Boolean): Boolean = foldRight(true)((a,b) => p(a) && b)
 
   def headOption: Option[A] = this match {
     case Empty => None
@@ -80,5 +85,7 @@ object StreamTest {
     assert(cons(1, cons(2, cons(3, Empty))).take(2).toList == List(1,2))
     assert(cons(1, cons(2, cons(3, Empty))).drop(2).toList == List(3))
     assert(cons(1, cons(2, cons(3, Empty))).takeWhile(_ <= 2).toList == List(1,2))
+    assert(cons(1, cons(2, cons(3, Empty))).forAll(_ < 5))
+    assert(!cons(1, cons(2, cons(3, Empty))).forAll(_ < 2))
   }
 }

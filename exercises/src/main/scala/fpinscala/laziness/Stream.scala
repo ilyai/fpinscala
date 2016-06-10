@@ -80,7 +80,19 @@ object Stream {
     else cons(as.head, apply(as.tail: _*))
 
   val ones: Stream[Int] = Stream.cons(1, ones)
-  def from(n: Int): Stream[Int] = sys.error("todo")
+
+  def constant[A](a: A): Stream[A] = {
+    lazy val s: Stream[A] = cons(a, s)
+    s
+  }
+  def constant2[A](a: A): Stream[A] = cons(a, constant2(a))
+
+  def from(n: Int): Stream[Int] = cons(n, from(n + 1))
+
+  def fibs[A]: Stream[Int] = {
+    def loop(p: Int, n: Int): Stream[Int] = cons(p + n, loop(p + n, p))
+    loop(0, 1)
+  }
 
   def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = sys.error("todo")
 }
@@ -102,5 +114,9 @@ object StreamTest {
     assert(cons(1, cons(2, cons(3, Empty))).filter(_ < 3).toList == List(1,2))
     assert(cons(1, cons(2, cons(3, Empty))).append(cons(4, cons(5, Empty))).toList == List(1,2,3,4,5))
     assert(cons(1, cons(2, cons(3, Empty))).flatMap(a => cons(a, cons(a, Empty))).toList == List(1,1,2,2,3,3))
+    assert(constant(1).take(3).toList == List(1,1,1))
+    assert(constant2(1).take(3).toList == List(1,1,1))
+    assert(from(1).take(3).toList == List(1,2,3))
+    assert(fibs.take(3).toList == List(1,1,2))
   }
 }

@@ -29,3 +29,19 @@ def maybeTwice2(b: Boolean, i: => Int) = {
   if (b) j+j else 0
 }
 val y = maybeTwice2(true, { println("hi"); 1 + 41 })
+
+Stream(1,2,3,4).map(_ + 10).filter(_ % 2 == 0)
+Stream(1,2,3,4).map(_ + 10).filter(_ % 2 == 0).toList
+Stream.cons(11, Stream(2,3,4)).map(_ + 10).filter(_ % 2 == 0)
+
+def find[A](s: Stream[A])(p: A => Boolean): Option[A] = s.filter(p).headOption
+
+find(Stream(1,2,3,4))(_ > 2)
+
+val ones: Stream[Int] = Stream.cons(1, ones)
+ones.take(5).toList
+ones.exists(_ % 2 != 0)
+
+ones.map(_ + 1).exists(_ % 2 == 0)
+ones.takeWhile(_ == 1)
+ones.forall(_ != 1)

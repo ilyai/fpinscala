@@ -85,7 +85,7 @@ object Stream {
     lazy val s: Stream[A] = cons(a, s)
     s
   }
-  def constant2[A](a: A): Stream[A] = cons(a, constant2(a))
+  def constant3[A](a: A): Stream[A] = cons(a, constant3(a))
 
   def from(n: Int): Stream[Int] = cons(n, from(n + 1))
 
@@ -94,7 +94,15 @@ object Stream {
     loop(0, 1)
   }
 
-  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = sys.error("todo")
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = f(z) match {
+    case Some((a,s)) => cons(a, unfold(s)(f))
+    case None => Empty
+  }
+
+  def fibs2[A]: Stream[Int] = unfold((0,1))({ case (p,n) => Some(((p + n), (p + n, p))) })
+  def from2(n: Int): Stream[Int] = unfold(n)(s => Some((s, s + 1)))
+  def constant2[A](a: A): Stream[A] = unfold(a)(s => Some((s,s)))
+  def ones2: Stream[Int] = unfold(1)(s => Some(s,s))
 }
 
 object StreamTest {
@@ -115,8 +123,11 @@ object StreamTest {
     assert(cons(1, cons(2, cons(3, Empty))).append(cons(4, cons(5, Empty))).toList == List(1,2,3,4,5))
     assert(cons(1, cons(2, cons(3, Empty))).flatMap(a => cons(a, cons(a, Empty))).toList == List(1,1,2,2,3,3))
     assert(constant(1).take(3).toList == List(1,1,1))
-    assert(constant2(1).take(3).toList == List(1,1,1))
     assert(from(1).take(3).toList == List(1,2,3))
-    assert(fibs.take(3).toList == List(1,1,2))
+    assert(unfold(1)(s => Some(s, s+1)).take(3).toList == List(1,2,3))
+    assert(fibs2.take(3).toList == List(1,1,2))
+    assert(from2(1).take(3).toList == List(1,2,3))
+    assert(constant2(1).take(3).toList == List(1,1,1))
+    assert(ones2.take(3).toList == List(1,1,1))
   }
 }

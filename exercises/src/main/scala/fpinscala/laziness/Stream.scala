@@ -62,6 +62,35 @@ trait Stream[+A] {
     case Empty => Nil: List[A]
     case Cons(h,t) => h() :: t().toList
   }
+
+  def map2[B](f: A => B): Stream[B] = unfold(this) {
+    case Cons(h,t) => Some((f(h()), t()))
+    case _ => None
+  }
+
+  def take2(n: Int): Stream[A] = unfold((this, n)) {
+    case (_, n) if n <= 0 => None
+    case (Cons(h,t), n) => Some((h(), (t(), n - 1)))
+  }
+
+  def takeWhile3(p: A => Boolean): Stream[A] = unfold(this) {
+    case Cons(h,t) if p(h()) => Some(h(), t())
+    case _ => None
+  }
+
+  def zipWith[AA >: A, B](a2: Stream[AA])(f: (A, AA) => B): Stream[B] = unfold((this, a2)) {
+    case (Empty, Empty) => None
+    case (Empty, _) => None
+    case (_, Empty) => None
+    case (Cons(h1,t1), Cons(h2,t2)) => Some(f(h1(),h2()), (t1(), t2()))
+  }
+
+  def zipAll[B](s2: Stream[B]): Stream[(Option[A], Option[B])] = unfold((this, s2)) {
+    case (Empty, Empty) => None
+    case (Empty, Cons(h2, t2)) => Some((None, Some(h2())), (Empty:Stream[A], t2()))
+    case (Cons(h1, t1), Empty) => Some((Some(h1()), None), (t1(), Empty:Stream[B]))
+    case (Cons(h1,t1), Cons(h2,t2)) => Some((Some(h1()),Some(h2())), (t1(), t2()))
+  }
 }
 case object Empty extends Stream[Nothing]
 case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
@@ -129,5 +158,12 @@ object StreamTest {
     assert(from2(1).take(3).toList == List(1,2,3))
     assert(constant2(1).take(3).toList == List(1,1,1))
     assert(ones2.take(3).toList == List(1,1,1))
+    assert(cons(1, cons(2, cons(3, Empty))).map2(_ * 2).toList == List(2,4,6))
+    assert(cons(1, cons(2, cons(3, Empty))).take2(2).toList == List(1,2))
+    assert(cons(1, cons(2, cons(3, Empty))).takeWhile3(_ <= 2).toList == List(1,2))
+    assert(cons(1, cons(2, cons(3, Empty))).zipWith(
+      cons(11, cons(12, cons(13, Empty))))((a, aa) => a + aa).toList == List(12, 14, 16))
+    assert(cons(1, cons(2, cons(3, Empty))).zipAll(cons(11, cons(12, Empty))).toList
+      == List((Some(1),Some(11)), (Some(2),Some(12)), (Some(3),None)))
   }
 }

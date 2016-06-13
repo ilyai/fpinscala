@@ -56,7 +56,9 @@ trait Stream[+A] {
   def append[T >: A](s: Stream[T]): Stream[T] = foldRight(s)((a,b) => cons(a,b))
   def flatMap[B](f: A => Stream[B]): Stream[B] = foldRight(Empty: Stream[B])((a,b) => f(a).append(b))
 
-  def startsWith[B](s: Stream[B]): Boolean = sys.error("todo")
+  def startsWith[B](s: Stream[B]): Boolean = zipAll(s).takeWhile(_._2.nonEmpty).forAll {
+    case (a,b) => a == b
+  }
 
   def toList: List[A] = this match {
     case Empty => Nil: List[A]
@@ -91,6 +93,11 @@ trait Stream[+A] {
     case (Cons(h1, t1), Empty) => Some((Some(h1()), None), (t1(), Empty:Stream[B]))
     case (Cons(h1,t1), Cons(h2,t2)) => Some((Some(h1()),Some(h2())), (t1(), t2()))
   }
+
+  def tails: Stream[Stream[A]] = unfold(this) {
+    case Empty => None
+    case as => Some(as, as.drop(1))
+  } append Empty
 }
 case object Empty extends Stream[Nothing]
 case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
@@ -165,5 +172,7 @@ object StreamTest {
       cons(11, cons(12, cons(13, Empty))))((a, aa) => a + aa).toList == List(12, 14, 16))
     assert(cons(1, cons(2, cons(3, Empty))).zipAll(cons(11, cons(12, Empty))).toList
       == List((Some(1),Some(11)), (Some(2),Some(12)), (Some(3),None)))
+    assert(cons(1, cons(2, cons(3, Empty))).startsWith(cons(1, cons(2, Empty))) == true)
+    assert(cons(1, cons(2, cons(3, Empty))).tails.headOption.exists(a => a.toList == List(1,2,3)))
   }
 }

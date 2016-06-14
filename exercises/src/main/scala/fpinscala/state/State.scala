@@ -30,9 +30,21 @@ object RNG {
       (f(a), rng2)
     }
 
-  def nonNegativeInt(rng: RNG): (Int, RNG) = ???
+  def randomPair(rng: RNG): ((Int, Int), RNG) = {
+    val (i1,rng2) = rng.nextInt
+    val (i2,rng3) = rng2.nextInt
+    ((i1,i2), rng3)
+  }
 
-  def double(rng: RNG): (Double, RNG) = ???
+  def nonNegativeInt(rng: RNG): (Int, RNG) = {
+    val (i,rng2) = rng.nextInt
+    (math.abs(i), rng2)
+  }
+
+  def double(rng: RNG): (Double, RNG) = {
+    val (i,rng2) = rng.nextInt
+    (i / (Int.MaxValue.toDouble + 1), rng2)
+  }
 
   def intDouble(rng: RNG): ((Int,Double), RNG) = ???
 
@@ -47,6 +59,17 @@ object RNG {
   def sequence[A](fs: List[Rand[A]]): Rand[List[A]] = ???
 
   def flatMap[A,B](f: Rand[A])(g: A => Rand[B]): Rand[B] = ???
+}
+
+object RNGTest {
+  import RNG._
+
+  def main(args: Array[String]): Unit = {
+    val rng = Simple(42)
+    assert(randomPair(rng)._1 == (16159453,-1281479697))
+    assert(nonNegativeInt(rng)._1 > 0)
+    assert(double(rng)._1.isInstanceOf[Double])
+  }
 }
 
 case class State[S,+A](run: S => (A, S)) {

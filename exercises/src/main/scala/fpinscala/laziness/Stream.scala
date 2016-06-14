@@ -98,6 +98,9 @@ trait Stream[+A] {
     case Empty => None
     case as => Some(as, as.drop(1))
   } append Empty
+
+  // TODO
+  // def scanRight[B](z: => B)(f: (A, => B) => B): B = foldRight(z)((a,b) => {})
 }
 case object Empty extends Stream[Nothing]
 case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]

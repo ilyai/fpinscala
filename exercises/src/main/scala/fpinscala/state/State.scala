@@ -46,11 +46,23 @@ object RNG {
     (i / (Int.MaxValue.toDouble + 1), rng2)
   }
 
-  def intDouble(rng: RNG): ((Int,Double), RNG) = ???
+  def intDouble(rng: RNG): ((Int,Double), RNG) = {
+    val (i1,rng2) = nonNegativeInt(rng)
+    val (d1,rng3) = double(rng2)
+    ((i1,d1), rng3)
+  }
 
-  def doubleInt(rng: RNG): ((Double,Int), RNG) = ???
+  def doubleInt(rng: RNG): ((Double,Int), RNG) = {
+    val ((i1,d1), rng2) = intDouble(rng)
+    ((d1,i1), rng2)
+  }
 
-  def double3(rng: RNG): ((Double,Double,Double), RNG) = ???
+  def double3(rng: RNG): ((Double,Double,Double), RNG) = {
+    val (d1,rng2) = double(rng)
+    val (d2,rng3) = double(rng2)
+    val (d3,rng4) = double(rng3)
+    ((d1,d2,d3), rng4)
+  }
 
   def ints(count: Int)(rng: RNG): (List[Int], RNG) = ???
 
@@ -69,6 +81,9 @@ object RNGTest {
     assert(randomPair(rng)._1 == (16159453,-1281479697))
     assert(nonNegativeInt(rng)._1 > 0)
     assert(double(rng)._1.isInstanceOf[Double])
+    assert(intDouble(rng)._1 == (16159453,-0.5967354853637516))
+    assert(doubleInt(rng)._1 == (-0.5967354853637516,16159453))
+    assert(double3(rng)._1 == (0.007524831686168909,-0.5967354853637516,-0.15846728440374136))
   }
 }
 

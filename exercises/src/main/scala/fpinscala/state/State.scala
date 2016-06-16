@@ -64,7 +64,16 @@ object RNG {
     ((d1,d2,d3), rng4)
   }
 
-  def ints(count: Int)(rng: RNG): (List[Int], RNG) = ???
+  def ints(count: Int)(rng: RNG): (List[Int], RNG) = {
+    def go(count: Int, r: RNG, xs: List[Int]): (List[Int], RNG) = {
+      if (count <= 0) (xs, r)
+      else {
+        val (i,r2) = r.nextInt
+        go(count - 1, r2, i :: xs)
+      }
+    }
+    go(count, rng, Nil)
+  }
 
   def map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
 
@@ -84,6 +93,7 @@ object RNGTest {
     assert(intDouble(rng)._1 == (16159453,-0.5967354853637516))
     assert(doubleInt(rng)._1 == (-0.5967354853637516,16159453))
     assert(double3(rng)._1 == (0.007524831686168909,-0.5967354853637516,-0.15846728440374136))
+    assert(ints(3)(rng)._1 == List(-340305902, -1281479697, 16159453))
   }
 }
 

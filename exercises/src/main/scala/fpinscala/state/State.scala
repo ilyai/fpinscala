@@ -46,6 +46,8 @@ object RNG {
     (i / (Int.MaxValue.toDouble + 1), rng2)
   }
 
+  def double2: Rand[Double] = map(nonNegativeInt)(_ / (Int.MaxValue.toDouble + 1))
+
   def intDouble(rng: RNG): ((Int,Double), RNG) = {
     val (i1,rng2) = nonNegativeInt(rng)
     val (d1,rng3) = double(rng2)
@@ -75,7 +77,17 @@ object RNG {
     go(count, rng, Nil)
   }
 
-  def map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
+  def map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = rng => {
+    val (a, rng2) = ra(rng)
+    val (b, rng3) = rb(rng2)
+    (f(a,b), rng3)
+  }
+
+  def both[A,B](ra: Rand[A], rb: Rand[B]): Rand[(A,B)] = map2(ra, rb)((_, _))
+
+  val randIntDouble: Rand[(Int, Double)] = both(int, double)
+
+  val randDoubleInt: Rand[(Double, Int)] = both(double, int)
 
   def sequence[A](fs: List[Rand[A]]): Rand[List[A]] = ???
 
@@ -94,6 +106,9 @@ object RNGTest {
     assert(doubleInt(rng)._1 == (-0.5967354853637516,16159453))
     assert(double3(rng)._1 == (0.007524831686168909,-0.5967354853637516,-0.15846728440374136))
     assert(ints(3)(rng)._1 == List(-340305902, -1281479697, 16159453))
+    assert(double2(rng)._1 == 0.007524831686168909)
+    assert(randIntDouble(rng)._1 == (16159453,-0.5967354853637516))
+    assert(randDoubleInt(rng)._1 == (0.007524831686168909,-1281479697))
   }
 }
 

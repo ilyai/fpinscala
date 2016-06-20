@@ -89,7 +89,7 @@ object RNG {
 
   val randDoubleInt: Rand[(Double, Int)] = both(double, int)
 
-  def sequence[A](fs: List[Rand[A]]): Rand[List[A]] = ???
+  def sequence[A](fs: List[Rand[A]]): Rand[List[A]] = fs.foldRight(unit(List[A]()))((a,acc) => map2(a, acc)(_ :: _))
 
   def flatMap[A,B](f: Rand[A])(g: A => Rand[B]): Rand[B] = ???
 }
@@ -109,6 +109,7 @@ object RNGTest {
     assert(double2(rng)._1 == 0.007524831686168909)
     assert(randIntDouble(rng)._1 == (16159453,-0.5967354853637516))
     assert(randDoubleInt(rng)._1 == (0.007524831686168909,-1281479697))
+    assert(sequence(List(double2, double2))(rng)._1 == List(0.007524831686168909, 0.5967354853637516))
   }
 }
 

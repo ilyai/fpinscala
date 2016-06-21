@@ -91,7 +91,25 @@ object RNG {
 
   def sequence[A](fs: List[Rand[A]]): Rand[List[A]] = fs.foldRight(unit(List[A]()))((a,acc) => map2(a, acc)(_ :: _))
 
-  def flatMap[A,B](f: Rand[A])(g: A => Rand[B]): Rand[B] = ???
+  def nonNegativeLessThan(n: Int): Rand[Int] = { rng =>
+    val (i, rng2) = nonNegativeInt(rng)
+    val mod = i % n
+    if (i + (n-1) - mod >= 0)
+      (mod, rng2)
+    else nonNegativeLessThan(n)(rng)
+  }
+
+  def nonNegativeLessThan2(n: Int): Rand[Int] = flatMap(nonNegativeInt) { i =>
+    val mod = i % n
+    if (i + (n-1) - mod >= 0)
+      unit(mod)
+    else nonNegativeLessThan(n)
+  }
+
+  def flatMap[A,B](f: Rand[A])(g: A => Rand[B]): Rand[B] = rng => {
+    val (a, rng2) = f(rng)
+    g(a)(rng2)
+  }
 }
 
 object RNGTest {
@@ -110,6 +128,8 @@ object RNGTest {
     assert(randIntDouble(rng)._1 == (16159453,-0.5967354853637516))
     assert(randDoubleInt(rng)._1 == (0.007524831686168909,-1281479697))
     assert(sequence(List(double2, double2))(rng)._1 == List(0.007524831686168909, 0.5967354853637516))
+    assert(nonNegativeLessThan(5)(rng)._1 == 3)
+    assert(nonNegativeLessThan2(5)(rng)._1 == 3)
   }
 }
 

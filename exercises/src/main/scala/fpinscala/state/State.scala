@@ -30,6 +30,8 @@ object RNG {
       (f(a), rng2)
     }
 
+  def map11[A,B](s: Rand[A])(f: A => B): Rand[B] = flatMap(rng => s(rng))(a => unit(f(a)))
+
   def randomPair(rng: RNG): ((Int, Int), RNG) = {
     val (i1,rng2) = rng.nextInt
     val (i2,rng3) = rng2.nextInt
@@ -83,6 +85,8 @@ object RNG {
     (f(a,b), rng3)
   }
 
+  def map22[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = flatMap(ra)(a => map(rb)(b => f(a,b)))
+
   def both[A,B](ra: Rand[A], rb: Rand[B]): Rand[(A,B)] = map2(ra, rb)((_, _))
 
   val randIntDouble: Rand[(Int, Double)] = both(int, double)
@@ -90,6 +94,7 @@ object RNG {
   val randDoubleInt: Rand[(Double, Int)] = both(double, int)
 
   def sequence[A](fs: List[Rand[A]]): Rand[List[A]] = fs.foldRight(unit(List[A]()))((a,acc) => map2(a, acc)(_ :: _))
+  def sequence2[A](fs: List[Rand[A]]): Rand[List[A]] = fs.foldRight(unit(List[A]()))((a,acc) => map22(a, acc)(_ :: _))
 
   def nonNegativeLessThan(n: Int): Rand[Int] = { rng =>
     val (i, rng2) = nonNegativeInt(rng)
@@ -128,6 +133,7 @@ object RNGTest {
     assert(randIntDouble(rng)._1 == (16159453,-0.5967354853637516))
     assert(randDoubleInt(rng)._1 == (0.007524831686168909,-1281479697))
     assert(sequence(List(double2, double2))(rng)._1 == List(0.007524831686168909, 0.5967354853637516))
+    assert(sequence2(List(double2, double2))(rng)._1 == List(0.007524831686168909, 0.5967354853637516))
     assert(nonNegativeLessThan(5)(rng)._1 == 3)
     assert(nonNegativeLessThan2(5)(rng)._1 == 3)
   }

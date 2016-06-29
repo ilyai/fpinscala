@@ -9,7 +9,9 @@ object Par {
   def run[A](s: ExecutorService)(a: Par[A]): Future[A] = a(s)
 
   def unit[A](a: A): Par[A] = (es: ExecutorService) => UnitFuture(a) // `unit` is represented as a function that returns a `UnitFuture`, which is a simple implementation of `Future` that just wraps a constant value. It doesn't use the `ExecutorService` at all. It's always done and can't be cancelled. Its `get` method simply returns the value that we gave it.
-  
+
+  def lazyUnit[A](a: => A): Par[A] = fork(unit(a))
+
   private case class UnitFuture[A](get: A) extends Future[A] {
     def isDone = true 
     def get(timeout: Long, units: TimeUnit) = get 
@@ -56,12 +58,26 @@ object Par {
 
 object Examples {
   import Par._
-  def sum(ints: IndexedSeq[Int]): Int = // `IndexedSeq` is a superclass of random-access sequences like `Vector` in the standard library. Unlike lists, these sequences provide an efficient `splitAt` method for dividing them into two parts at a particular index.
+  def sum0(ints: Seq[Int]): Int = ints.foldLeft(0)((a,b) => a + b)
+  def sum(ints: IndexedSeq[Int]): Par[Int] = // `IndexedSeq` is a superclass of random-access sequences like `Vector` in the standard library. Unlike lists, these sequences provide an efficient `splitAt` method for dividing them into two parts at a particular index.
     if (ints.size <= 1)
-      ints.headOption getOrElse 0 // `headOption` is a method defined on all collections in Scala. We saw this function in chapter 3.
-    else { 
+      Par.unit(ints.headOption getOrElse 0) // `headOption` is a method defined on all collections in Scala. We saw this function in chapter 3.
+    else {
       val (l,r) = ints.splitAt(ints.length/2) // Divide the sequence in half using the `splitAt` function.
-      sum(l) + sum(r) // Recursively sum both halves and add the results together.
+      Par.map2(Par.fork(sum(l)), Par.fork(sum(r)))(_ + _)
     }
 
+}
+
+object ParTest {
+  import Par._
+  import Examples._
+
+  val pool: ExecutorService = Executors.newFixedThreadPool(10)
+
+  def main(args: Array[String]): Unit = {
+    assert(sum0(Seq(1,2,3)) == 6)
+    assert(sum(IndexedSeq(1,2,3))(pool).get() == 6)
+    pool.shutdown()
+  }
 }

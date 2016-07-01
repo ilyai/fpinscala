@@ -49,6 +49,17 @@ object Par {
 
   def asyncF[A,B](f: A => B): A => Par[B] = a => lazyUnit(f(a))
 
+  def sequence[A](ps: List[Par[A]]): Par[List[A]] = ps.foldRight[Par[List[A]]](unit(List()))((a,b) => map2(a,b)(_ :: _))
+
+  def parMap[A,B](ps: List[A])(f: A => B): Par[List[B]] = fork {
+    val fbs: List[Par[B]] = ps.map(asyncF(f))
+    sequence(fbs)
+  }
+
+  def parFilter[A](as: List[A])(f: A => Boolean): Par[List[A]] = {
+    map(sequence(as.map(asyncF(aa => if (f(aa)) List(aa) else List()))))(_.flatten)
+  }
+
   /* Gives us infix syntax for `Par`. */
   implicit def toParOps[A](p: Par[A]): ParOps[A] = new ParOps(p)
 
@@ -80,6 +91,8 @@ object ParTest {
   def main(args: Array[String]): Unit = {
     assert(sum0(Seq(1,2,3)) == 6)
     assert(sum(IndexedSeq(1,2,3))(pool).get() == 6)
+    assert(parMap(List(1,2,3))(_ * 2)(pool).get() == List(2, 4, 6))
+    assert(parFilter(List(1,2,3))(_ > 2)(pool).get() == List(3))
     pool.shutdown()
   }
 }

@@ -3,6 +3,10 @@ package fpinscala.parallelism
 import java.util.concurrent._
 import language.implicitConversions
 
+//sealed trait Future[A] {
+//  private[parallelism] def apply(k: A => Unit): Unit
+//}
+
 object Par {
   type Par[A] = ExecutorService => Future[A]
   
@@ -30,6 +34,8 @@ object Par {
     es => es.submit(new Callable[A] { 
       def call = a(es).get
     })
+
+  def delay2[A](fa: => Par[A]): Par[A] = es => fa(es)
 
   def map[A,B](pa: Par[A])(f: A => B): Par[B] = 
     map2(pa, unit(()))((a,_) => f(a))
@@ -60,11 +66,53 @@ object Par {
     map(sequence(as.map(asyncF(aa => if (f(aa)) List(aa) else List()))))(_.flatten)
   }
 
+  def choiceN[A](n: Par[Int])(choices: List[Par[A]]): Par[A] =
+    es => {
+      val ind = run(es)(n).get // Full source files
+      run(es)(choices(ind))
+    }
+
+  def choiceMap[K,V](key: Par[K])(choices: Map[K,Par[V]]): Par[V] =
+    es => {
+      val k = run(es)(key).get
+      run(es)(choices(k))
+    }
+
+  def chooser[A,B](p: Par[A])(choices: A => Par[B]): Par[B] =
+    es => {
+      val k = run(es)(p).get
+      run(es)(choices(k))
+    }
+
+  /* `chooser` is usually called `flatMap` or `bind`. */
+  def flatMap[A,B](p: Par[A])(choices: A => Par[B]): Par[B] =
+    es => {
+      val k = run(es)(p).get
+      run(es)(choices(k))
+    }
+
+  def join[A](a: Par[Par[A]]): Par[A] =
+    es => run(es)(run(es)(a).get())
+
+//  def join[A](a: Par[Par[A]]): Par[A] =
+//    es => a(es).get.apply(es)
+
   /* Gives us infix syntax for `Par`. */
   implicit def toParOps[A](p: Par[A]): ParOps[A] = new ParOps(p)
 
   class ParOps[A](p: Par[A]) {
 
+    def flatMap[B](f: A => Par[B]): Par[B] =
+      Par.flatMap(p)(f)
+
+    def map[B](f: A => B): Par[B] =
+      Par.map(p)(f)
+
+    def map2[B,C](p2: Par[B])(f: (A,B) => C): Par[C] =
+      Par.map2(p,p2)(f)
+
+    def zip[B](p2: Par[B]): Par[(A,B)] =
+      p.map2(p2)((_,_))
 
   }
 }
@@ -94,5 +142,9 @@ object ParTest {
     assert(parMap(List(1,2,3))(_ * 2)(pool).get() == List(2, 4, 6))
     assert(parFilter(List(1,2,3))(_ > 2)(pool).get() == List(3))
     pool.shutdown()
+    val a = lazyUnit(42 + 1)
+    val S = Executors.newFixedThreadPool(1)
+    println(Par.equal(S)(a, fork(a)))     // deadlock
+    S.shutdown()
   }
 }

@@ -21,13 +21,25 @@ object Monoid {
     val zero = Nil
   }
 
-  val intAddition: Monoid[Int] = sys.error("todo")
+  val intAddition: Monoid[Int] = new Monoid[Int] {
+    override def op(a1: Int, a2: Int): Int = a1 + a2
+    val zero = 0
+  }
 
-  val intMultiplication: Monoid[Int] = sys.error("todo")
+  lazy val intMultiplication: Monoid[Int] = new Monoid[Int] {
+    override def op(a1: Int, a2: Int): Int = a1 * a2
+    val zero = 1
+  }
 
-  val booleanOr: Monoid[Boolean] = sys.error("todo")
+  lazy val booleanOr: Monoid[Boolean] = new Monoid[Boolean] {
+    override def op(a1: Boolean, a2: Boolean): Boolean = a1 || a2
+    val zero = false
+  }
 
-  val booleanAnd: Monoid[Boolean] = sys.error("todo")
+  lazy val booleanAnd: Monoid[Boolean] = new Monoid[Boolean] {
+    override def op(a1: Boolean, a2: Boolean): Boolean = a1 || a2
+    val zero = false
+  }
 
   def optionMonoid[A]: Monoid[Option[A]] = sys.error("todo")
 
@@ -74,7 +86,7 @@ object Monoid {
   def parFoldMap[A,B](v: IndexedSeq[A], m: Monoid[B])(f: A => B): Par[B] = 
     sys.error("todo") 
 
-  val wcMonoid: Monoid[WC] = sys.error("todo")
+  lazy val wcMonoid: Monoid[WC] = sys.error("todo")
 
   def count(s: String): Int = sys.error("todo")
 
@@ -89,6 +101,17 @@ object Monoid {
 
   def bag[A](as: IndexedSeq[A]): Map[A, Int] =
     sys.error("todo")
+}
+
+object MonoidTest {
+  import Monoid._
+
+  def main(args: Array[String]): Unit = {
+    assert(intAddition.op(1,intAddition.op(1,1)) == intAddition.op(intAddition.op(1,1),1))
+    assert(intMultiplication.op(2,intMultiplication.op(3,4)) == intMultiplication.op(intMultiplication.op(2,3),4))
+    assert(booleanOr.op(true,booleanOr.op(false,true)) == booleanOr.op(booleanOr.op(false,true),true))
+    assert(booleanAnd.op(true,booleanAnd.op(false,true)) == booleanAnd.op(booleanAnd.op(false,true),true))
+  }
 }
 
 trait Foldable[F[_]] {
